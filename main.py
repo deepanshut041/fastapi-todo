@@ -2,6 +2,7 @@ import uvicorn
 from fastapi import APIRouter, FastAPI
 from contextlib import asynccontextmanager
 from core.db import db
+from api.router import v1_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -21,7 +22,7 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-v1_router = APIRouter(prefix="/api/v1")
+
 
 @app.get("/")
 def read_root():
