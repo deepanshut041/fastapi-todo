@@ -1,0 +1,44 @@
+name: Pull Request Tests and Coverage
+
+on:
+  push:
+    branches: [ "main" ]
+permissions:
+  id-token: write # This is required for requesting the JWT
+  contents: write # This is required for actions/checkout
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Docker
+        uses: docker/setup-buildx-action@v2
+
+      - name: Create test.env file
+        run: |
+          touch .env
+          echo "AI_ENVIRONMENT=Development" >> .env
+          echo "SECRET_KEY=jjkdkew87328732hjhjduy" >> .env
+          echo "POSTGRES_USER=potgres" >> .env
+          echo "POSTGRES_PASSWORD=TestPass1234" >> .env
+          echo "POSTGRES_DB=tododb_test" >> .env
+          echo "POSTGRES_DB_TEST=tododb_test" >> .env
+          echo "POSTGRES_HOST=postgres" >> .env
+          echo "POSTGRES_PORT=5432" >> .env
+
+      - name: Build and run services using Docker Compose
+        run: docker compose -f docker-compose.yml up -d
+
+      - name: Wait for services to be ready
+        run: sleep 5
+
+      - name: Run Coverage Tests
+        run: docker compose -f docker-compose.yml exec backend pytest
+
+      - name: Shut down services
+        run: docker compose -f docker-compose.yml down
