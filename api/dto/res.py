@@ -24,3 +24,9 @@ class RetrieveTodoResponse(BaseModel):
     content: str
     created_at: datetime
     updated_at: datetime
+
+class UpdateTodoResponse(BaseModel):
+    id: int
+    content: str
+    created_at: datetime
+    updated_at: datetime

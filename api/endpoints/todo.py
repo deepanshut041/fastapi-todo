@@ -8,8 +8,8 @@ from sqlalchemy import select
 
 from api.deps import get_async_db_session
 from models import Todo
-from api.dto.req import CreateTodoRequest
-from api.dto.res import CreateTodoResponse, RetrieveTodoResponse, ListTodosResponse, ListTodosResponseItem
+from api.dto.req import CreateTodoRequest, UpdateTodoRequest
+from api.dto.res import CreateTodoResponse, RetrieveTodoResponse, ListTodosResponse, ListTodosResponseItem, UpdateTodoResponse
 
 
 # /api/v1/todo
@@ -94,3 +94,45 @@ async def list_todos(
             for row in result_rows
         ],
     )
+
+@router.put("/{todo_id}", summary="Update a todo")
+async def update_todo(
+    db: Annotated[AsyncSession, Depends(get_async_db_session)],
+    todo_id: int,
+    request_data: UpdateTodoRequest,
+) -> UpdateTodoResponse:
+    stmt = select(Todo).where(
+        Todo.id == todo_id,
+        Todo.deleted_at.is_(None),
+    )
+    todo = (await db.execute(stmt)).scalar()
+    if todo is None:
+        raise HTTPException(status_code=404, detail="Todo not found")
+
+    todo.content = request_data.content
+    await db.commit()
+    await db.refresh(todo)
+    return UpdateTodoResponse(
+        id=todo.id,
+        content=todo.content,
+        created_at=todo.created_at,
+        updated_at=todo.updated_at,
+    )
+
+@router.delete("/{todo_id}", summary="Delete a todo", status_code=204)
+async def delete_todo(
+    db: Annotated[AsyncSession, Depends(get_async_db_session)],
+    todo_id: int,
+) -> None:
+    stmt = select(Todo).where(
+        Todo.id == todo_id,
+        Todo.deleted_at.is_(None),
+    )
+    todo = (await db.execute(stmt)).scalar()
+    if todo is None:
+        raise HTTPException(status_code=404, detail="Todo not found")
+
+    todo.deleted_at = func.now()
+    await db.commit()
+    await db.refresh(todo)
+    return None
