@@ -22,7 +22,7 @@ class Settings(BaseSettings):
                 password=self.POSTGRES_PASSWORD,
                 host=self.POSTGRES_HOST,
                 port=self.POSTGRES_PORT,
-                path=f"/{self.POSTGRES_DB}",  # Ensure the path starts with a '/'
+                path=f"{self.POSTGRES_DB}",  # Ensure the path starts with a '/'
             )
         )
 
